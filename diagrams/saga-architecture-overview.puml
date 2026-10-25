@@ -1,0 +1,31 @@
+@startuml saga-architecture-overview.puml
+skinparam componentStyle rectangle
+
+node "API Gateway" as Gateway
+
+package "Saga Orchestration" {
+  component "Order Service\n(Saga Orchestrator)" as Order
+  database "Order DB" as OrderDB
+}
+
+queue "Message Broker\n(RabbitMQ / Kafka)" as Broker
+
+package "Inventory Domain" {
+  component "Inventory Service" as Inventory
+  database "Inventory DB" as InventoryDB
+}
+
+package "Payment Domain" {
+  component "Payment Service" as Payment
+  database "Payment DB" as PaymentDB
+}
+
+Gateway --> Order : POST /orders
+Order <--> Broker : Commands & Events
+Broker <--> Inventory : Subscribes/Publishes
+Broker <--> Payment : Subscribes/Publishes
+
+Order --> OrderDB
+Inventory --> InventoryDB
+Payment --> PaymentDB
+@enduml

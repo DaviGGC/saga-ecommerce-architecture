@@ -1,0 +1,22 @@
+@startuml sequence-success-flow.puml
+actor Cliente
+participant "Order Service\n(Orchestrator)" as Order
+queue "Message Broker" as Broker
+participant "Inventory Service" as Inventory
+participant "Payment Service" as Payment
+
+Cliente -> Order: POST /checkout
+Order -> Order: Salva Pedido (Status: PENDING)
+Order -> Broker: Evento: OrderCreated
+Broker -> Inventory: Comando: ReserveStock
+Inventory -> Inventory: Reserva Estoque
+Inventory -> Broker: Evento: StockReserved
+Broker -> Order: Atualiza estado da Saga
+Order -> Broker: Comando: ProcessPayment
+Broker -> Payment: Processa Pagamento
+Payment -> Payment: Gateway Externo Retorna OK
+Payment -> Broker: Evento: PaymentApproved
+Broker -> Order: Atualiza estado da Saga
+Order -> Order: Salva Pedido (Status: APPROVED)
+Order -> Cliente: Retorna 200 OK (Pedido Aprovado)
+@enduml
